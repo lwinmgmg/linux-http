@@ -7,8 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/lwinmgmg/linux-http/utils"
 )
 
@@ -36,13 +38,29 @@ func ParseToken(keyString, tokenType string) (string, error) {
 	return strings.TrimSpace(inputTokenString), nil
 }
 
-func ValidateJwtToken(tkn, key, claim *jwt.Claims)
+func ValidateJwtToken(tkn, key string, claim jwt.Claims) error {
+	_, err := jwt.ParseWithClaims(tkn, claim, func(token *jwt.Token) (interface{}, error) {
+		iss, err := token.Claims.GetIssuer()
+		if err != nil {
+			return nil, err
+		}
+		if !slices.Contains(Env.LH_ISSUERS, iss) {
+			return nil, errors.New("unknown issuer")
+		}
+		issuedAt, err := token.Claims.GetIssuedAt()
+		if err != nil {
+			return nil, err
+		}
+		return utils.Hash256(fmt.Sprintf("%v%v", key, issuedAt)), nil
+	})
+	return err
+}
 
-func JwtMiddleware() gin.HandlerFunc {
+func JwtMiddleware(tknMap map[string]int) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tokenType := "Bearer"
+		tknType := "Bearer"
 		keyString := ctx.Request.Header.Get("Authorization")
-		inputTokenString, err := ParseToken(keyString, tokenType)
+		tknStr, err := ParseToken(keyString, tknType)
 		if err != nil {
 			if err == utils.ErrNotFound {
 				panic(NewPanic(http.StatusUnauthorized, 1, "Authorization Required"))
@@ -52,20 +70,12 @@ func JwtMiddleware() gin.HandlerFunc {
 			}
 		}
 		claim := jwt.RegisteredClaims{}
-		if err := ValidateToken(inputTokenString, tokenKey, &claim); err != nil {
+		if err := ValidateJwtToken(tknStr, Env.LH_SECRET, &claim); err != nil {
 			if errors.Is(err, jwt.ErrTokenExpired) {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, datamodels.DefaultResponse{
-					Code:    3,
-					Message: "Authorization Required! [TokenExpired]",
-				})
+				panic(NewPanic(http.StatusUnauthorized, 3, "Authorization Required!"))
 			} else {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, datamodels.DefaultResponse{
-					Code:    4,
-					Message: fmt.Sprintf("Authorization Required! [%v]", err),
-				})
+				panic(NewPanic(http.StatusUnauthorized, 4, "Authorization Required!"))
 			}
-			return
 		}
-		ctx.Set("userCode", claim.Subject)
 	}
 }

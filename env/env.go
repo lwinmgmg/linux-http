@@ -3,11 +3,13 @@ package env
 import (
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Settings struct {
 	LH_HOST    string
 	LH_PORT    int
+	LH_ISSUERS []string
 	LH_SECRET  string
 	LH_DB_PATH string
 }
@@ -38,6 +40,7 @@ func NewEnv() Settings {
 	return Settings{
 		LH_HOST:    getEnvString("LH_HOST", "localhost"),
 		LH_PORT:    getEnvInt("LH_PORT", 80),
+		LH_ISSUERS: strings.Split(getEnvString("LH_ISSUERS", "linux-http"), ","),
 		LH_SECRET:  lhSecret,
 		LH_DB_PATH: getEnvString("LH_DB_PATH", "db/lh.db"),
 	}
