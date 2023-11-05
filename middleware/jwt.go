@@ -11,6 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/lwinmgmg/linux-http/models"
+	"github.com/lwinmgmg/linux-http/services"
 	"github.com/lwinmgmg/linux-http/utils"
 )
 
@@ -22,7 +24,8 @@ func GetToken(issuer, tokenKey string, expiresAfter time.Duration) string {
 		ExpiresAt: jwt.NewNumericDate(nowTime.Add(expiresAfter)),
 	}
 	tkn := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-	output, _ := tkn.SignedString(utils.Hash256(fmt.Sprintf("%v%v", tokenKey, claim.IssuedAt)))
+	fmt.Println(fmt.Sprintf("%v%v", tokenKey, claim.IssuedAt.Unix()))
+	output, _ := tkn.SignedString(utils.Hash256(fmt.Sprintf("%v%v", tokenKey, claim.IssuedAt.Unix())))
 	return output
 }
 
@@ -51,7 +54,7 @@ func ValidateJwtToken(tkn, key string, claim jwt.Claims) error {
 		if err != nil {
 			return nil, err
 		}
-		return utils.Hash256(fmt.Sprintf("%v%v", key, issuedAt)), nil
+		return utils.Hash256(fmt.Sprintf("%v%v", key, issuedAt.Unix())), nil
 	})
 	return err
 }
@@ -67,6 +70,20 @@ func JwtMiddleware(tknMap map[string]int) gin.HandlerFunc {
 			}
 			if err == utils.ErrInvalid {
 				panic(NewPanic(http.StatusUnauthorized, 2, "Wrong Token Type"))
+			}
+		}
+		if Env.LH_TKN_LIMIT != 0 {
+			_, ok := tknMap[tknStr]
+			if ok {
+				panic(NewPanic(http.StatusUnauthorized, 5, "Authorization Required!"))
+			} else {
+				tknMap[tknStr] = 1
+				if err := services.DB.Create(models.Key{
+					Key:   tknStr,
+					Count: tknMap[tknStr],
+				}).Error; err != nil {
+					panic(err)
+				}
 			}
 		}
 		claim := jwt.RegisteredClaims{}
