@@ -62,6 +62,6 @@ func NewEnv() Settings {
 		LH_TKN_LIMIT:  getEnvInt("LH_TKN_LIMIT", 1),
 		LH_SECRET:     lhSecret,
 		LH_ALLOW_CMDS: strings.Split(getEnvString("LH_ALLOW_CMDS", ""), CMD_DELIMITER),
-		LH_DB_PATH:    getEnvString("LH_DB_PATH", "db/lh.db"),
+		LH_DB_PATH:    getEnvString("LH_DB_PATH", "db/key.db"),
 	}
 }
