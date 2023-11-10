@@ -44,9 +44,9 @@ RUN apt install -y ca-certificates
 RUN mkdir ${LINUX_USER_HOME_DIR}
 RUN mkdir ${LINUX_WORKDIR}
 RUN mkdir ${DB_DIR}
-RUN chown ${LINUX_USER}:${LINUX_USER} -R ${LINUX_USER_HOME_DIR}
-RUN chown ${LINUX_USER}:${LINUX_USER} -R ${LINUX_WORKDIR}
-RUN chown ${LINUX_USER}:${LINUX_USER} -R ${DB_DIR}
+RUN chown ${LINUX_USER}:${LINUX_USER} ${LINUX_USER_HOME_DIR}
+RUN chown ${LINUX_USER}:${LINUX_USER} ${LINUX_WORKDIR}
+RUN chown ${LINUX_USER}:${LINUX_USER} ${DB_DIR}
 
 # Copy compiled binary
 COPY --from=compiler --chown=${LINUX_USER}:${LINUX_USER} "${WORKDIR_NAME}/${OUTPUT_DIR}/${OUTPUT_BINARY_NAME}" "${LINUX_BINARY_DIR}/${OUTPUT_BINARY_NAME}"
@@ -56,13 +56,14 @@ COPY --from=compiler --chown=${LINUX_USER}:${LINUX_USER} "${WORKDIR_NAME}/vendor
 
 COPY --from=compiler --chown=${LINUX_USER}:${LINUX_USER} "${WORKDIR_NAME}/.env.example" ${LINUX_WORKDIR}/.env.example
 
-VOLUME [ "${DB_DIR}" ]
-
 USER ${LINUX_USER}
+
 
 WORKDIR ${LINUX_WORKDIR}
 
 RUN mv .env.example .env
+
+VOLUME [ "${DB_DIR}" ]
 
 EXPOSE 8888
 
