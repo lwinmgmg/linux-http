@@ -41,12 +41,11 @@ RUN groupadd --gid ${LINUX_USER_UID} ${LINUX_USER} \
 RUN apt update
 RUN apt install -y ca-certificates
 
-RUN mkdir ${LINUX_USER_HOME_DIR}
-RUN mkdir ${LINUX_WORKDIR}
-RUN mkdir ${DB_DIR}
-RUN chown ${LINUX_USER}:${LINUX_USER} ${LINUX_USER_HOME_DIR}
-RUN chown ${LINUX_USER}:${LINUX_USER} ${LINUX_WORKDIR}
-RUN chown ${LINUX_USER}:${LINUX_USER} ${DB_DIR}
+RUN mkdir -p ${LINUX_USER_HOME_DIR} && chown -R ${LINUX_USER}:${LINUX_USER} ${LINUX_USER_HOME_DIR}
+RUN mkdir -p ${LINUX_WORKDIR} && chown -R ${LINUX_USER}:${LINUX_USER} ${LINUX_WORKDIR}
+RUN mkdir -p ${DB_DIR} && chown -R ${LINUX_USER}:${LINUX_USER} ${DB_DIR} && chmod 777 ${DB_DIR}
+
+VOLUME [ "/var/lib/linux-http" ]
 
 # Copy compiled binary
 COPY --from=compiler --chown=${LINUX_USER}:${LINUX_USER} "${WORKDIR_NAME}/${OUTPUT_DIR}/${OUTPUT_BINARY_NAME}" "${LINUX_BINARY_DIR}/${OUTPUT_BINARY_NAME}"
@@ -56,14 +55,16 @@ COPY --from=compiler --chown=${LINUX_USER}:${LINUX_USER} "${WORKDIR_NAME}/vendor
 
 COPY --from=compiler --chown=${LINUX_USER}:${LINUX_USER} "${WORKDIR_NAME}/.env.example" ${LINUX_WORKDIR}/.env.example
 
-USER ${LINUX_USER}
-
-
 WORKDIR ${LINUX_WORKDIR}
 
 RUN mv .env.example .env
+RUN touch ${LH_DB_PATH}
 
-VOLUME [ "${DB_DIR}" ]
+COPY entrypoint.sh /usr/local/bin/
+
+ENTRYPOINT [ "entrypoint.sh" ]
+
+STOPSIGNAL SIGINT
 
 EXPOSE 8888
 
