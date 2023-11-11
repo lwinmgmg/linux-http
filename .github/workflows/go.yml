@@ -10,27 +10,27 @@ on:
     branches: [ "master" ]
 
 jobs:
-  # test:
-  #   runs-on: ubuntu-latest
-  #   container: golang:1.21-bookworm
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #   - name: Set up Go
-  #     uses: actions/setup-go@v4
-  #     with:
-  #       go-version: '1.21'
-  #   - name: Test
-  #     run: |
-  #       export LH_ENV_PATH=$(pwd)/.env.example
-  #       mkdir $(pwd)/db
-  #       export LH_DB_PATH=$(pwd)/db/test.db
-  #       go test -v ./...
+  test:
+    runs-on: ubuntu-latest
+    container: golang:1.21-bookworm
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    - name: Test
+      run: |
+        export LH_ENV_PATH=$(pwd)/.env.example
+        mkdir $(pwd)/db
+        export LH_DB_PATH=$(pwd)/db/test.db
+        go test -v ./...
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: lwinmgmg/linux-http-action@v2
+      - uses: lwinmgmg/linux-http-action@v3
         with:
-          who-to-greet: 'Mona the Octocat'
-      - run: echo random-number ${{ steps.foo.outputs.random-number }}
-        shell: bash
-
+          issuer:  ${{ secrets.LH_ISSUER }}
+          secret:  ${{ secrets.LH_SECRET }}
+          url:  ${{ secrets.LH_URL }}
+          cmd:  ${{ secrets.LH_CMD }}
