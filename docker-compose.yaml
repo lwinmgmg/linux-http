@@ -1,8 +1,0 @@
-version: "3.1"
-services:
-  user:
-    build: .
-    # volumes:
-    #   - ./data:/var/lib/linux-http
-    ports:
-      - 8888:8888
