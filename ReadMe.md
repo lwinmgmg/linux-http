@@ -16,7 +16,7 @@ Example Input Json
 }
 or 
 {
-    "cmd": "ls -ahl",
+    "cmd": "sudo apt -y upgrade",
     "input": ""
 }
 ```
