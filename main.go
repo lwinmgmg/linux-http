@@ -13,7 +13,7 @@ import (
 var Env env.Settings = env.NewEnv()
 
 func main() {
-	app := gin.New()
+	app := gin.Default()
 	app.Use(gin.CustomRecovery(middleware.PanicMiddleware))
 	ctrl := api.ControllerV1{
 		App: app.Group(""),

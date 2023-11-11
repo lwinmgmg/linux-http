@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"golang.org/x/exp/slices"
 
@@ -15,19 +14,6 @@ import (
 	"github.com/lwinmgmg/linux-http/services"
 	"github.com/lwinmgmg/linux-http/utils"
 )
-
-func GetToken(issuer, tokenKey string, expiresAfter time.Duration) string {
-	nowTime := time.Now().UTC()
-	claim := jwt.RegisteredClaims{
-		Issuer:    issuer,
-		IssuedAt:  jwt.NewNumericDate(nowTime),
-		ExpiresAt: jwt.NewNumericDate(nowTime.Add(expiresAfter)),
-	}
-	tkn := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-	fmt.Println(fmt.Sprintf("%v%v", tokenKey, claim.IssuedAt.Unix()))
-	output, _ := tkn.SignedString(utils.Hash256(fmt.Sprintf("%v%v", tokenKey, claim.IssuedAt.Unix())))
-	return output
-}
 
 func ParseToken(keyString, tokenType string) (string, error) {
 	if keyString == "" {
