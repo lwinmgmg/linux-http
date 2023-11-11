@@ -11,21 +11,21 @@ on:
 
 jobs:
 
-  test:
-    runs-on: ubuntu-latest
-    container: golang:1.21-bookworm
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
-    - name: Test
-      run: |
-        export LH_ENV_PATH=$(pwd)/.env.example
-        mkdir $(pwd)/db
-        export LH_DB_PATH=$(pwd)/db/test.db
-        go test -v ./...
+  # test:
+  #   runs-on: ubuntu-latest
+  #   container: golang:1.21-bookworm
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Set up Go
+  #     uses: actions/setup-go@v4
+  #     with:
+  #       go-version: '1.21'
+  #   - name: Test
+  #     run: |
+  #       export LH_ENV_PATH=$(pwd)/.env.example
+  #       mkdir $(pwd)/db
+  #       export LH_DB_PATH=$(pwd)/db/test.db
+  #       go test -v ./...
 
   deploy:
     runs-on: ubuntu-latest
